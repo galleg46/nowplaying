@@ -1,0 +1,13 @@
+## Client ## 
+
+# dependencies
+client/node_modules
+
+# production
+client/build
+
+
+## Server ##
+server/node_modules
+server/.env
+
