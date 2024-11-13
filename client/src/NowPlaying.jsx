@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Slide from '@mui/material/Slide';
+import style from '@emotion/styled'
 
 function NowPlaying(props) {
 
     const [current_track, setCurrent_track] = useState(null);
     const [currentTrackId, setCurrentTrackId] = useState(null);
+    const [showTrack, setShowTrack] = useState(false);
 
     useEffect(() => {
 
         const fetchNowPlaying = async () => {
-        
+                    
             try {
     
                 // Send the user token to the backend
@@ -26,6 +29,9 @@ function NowPlaying(props) {
                 if (data.item.id !== currentTrackId) {
                     setCurrent_track(data);
                     setCurrentTrackId(data.item.id);
+                    setTimeout(() =>  {
+                        setShowTrack(true);
+                    }, 10000);
                 }
 
             } catch (error) {
@@ -47,9 +53,15 @@ function NowPlaying(props) {
     return (
         <div>
             {current_track ? (
-                <div>
-                    <h2>Now Playing: {current_track.item.album.name}</h2>
-                    <img src={current_track.item.album.images[0].url}/>
+                <div className='main-wrapper'>
+                    <div className='container'>
+                        <Slide direction='down' in={showTrack}>
+                            <div>
+                                <img src={current_track.item.album.images[2].url}/>
+                                <p>{current_track.item.name} - {current_track.item.artists[0].name}</p>
+                            </div>
+                        </Slide>
+                    </div>
                 </div>
             ) : (
                 <p>Loading...</p>
