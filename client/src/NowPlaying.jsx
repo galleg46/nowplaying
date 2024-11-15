@@ -29,8 +29,11 @@ function NowPlaying(props) {
                 if (data.item.id !== currentTrackId) {
                     setCurrent_track(data);
                     setCurrentTrackId(data.item.id);
+                    
+                    // Show track and hide after 10 seconds
+                    setShowTrack(true);
                     setTimeout(() =>  {
-                        setShowTrack(true);
+                        setShowTrack(false);
                     }, 10000);
                 }
 
@@ -55,7 +58,7 @@ function NowPlaying(props) {
             {current_track ? (
                 <div className='main-wrapper'>
                     <div className='container'>
-                        <Slide direction='down' in={showTrack}>
+                        <Slide direction='down' in={showTrack} mountOnEnter unmountOnExit>
                             <div>
                                 <img src={current_track.item.album.images[2].url}/>
                                 <p>{current_track.item.name} - {current_track.item.artists[0].name}</p>
