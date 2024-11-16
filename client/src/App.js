@@ -6,6 +6,7 @@ import NowPlaying from "./NowPlaying";
 function App() {
 
   const [token, setToken] = useState('');
+  const [refreshToken, setRefreshToken] = useState('');
 
   useEffect(() => {
     
@@ -13,6 +14,7 @@ function App() {
       const response = await fetch('/auth/token');
       const json = await response.json();
       setToken(json.access_token);
+      setRefreshToken(json.refresh_token);
     }
 
     getToken();
@@ -21,7 +23,7 @@ function App() {
   
   return (
     <>
-      { (token === '') ? <Login/> : <NowPlaying token={token} /> }
+      { (token === '') ? <Login/> : <NowPlaying token={token} refreshToken={refreshToken} /> }
     </>
   );
 }

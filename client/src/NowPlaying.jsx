@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function NowPlaying(props) {
+function NowPlaying({token, refreshToken}) {
 
     const [current_track, setCurrent_track] = useState(null);
     const [currentTrackId, setCurrentTrackId] = useState(null);
@@ -17,7 +17,7 @@ function NowPlaying(props) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ token: props.token }),
+                    body: JSON.stringify({ token: token, refreshToken: refreshToken }),
                 });
     
                 // Parse the response data
@@ -42,7 +42,7 @@ function NowPlaying(props) {
         // Clear interval when component unmounts or if the song ID changes
         return () => clearInterval(intervalId);
 
-    }, [currentTrackId, props.token]);
+    }, [currentTrackId, token]);
 
     return (
         <div>

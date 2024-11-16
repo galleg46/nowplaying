@@ -15,16 +15,6 @@ var spotify_client_secret = process.env.SPOTIFY_CLIENT_SECRET
 
 var spotify_redirect_uri = 'http://localhost:3000/auth/callback'
 
-var randomStringGenerator = function (length) {
-    var text = '';
-    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for (var i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-};
-
 var app = express();
 
 app.use(express.json()); // to parse JSON request bodies
@@ -66,6 +56,7 @@ app.get('/auth/login', (req, res) => {
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
         access_token = body.access_token;
+        refresh_token = body.refresh_token;
         res.redirect('/')
       }
     });
@@ -73,12 +64,11 @@ app.get('/auth/login', (req, res) => {
   })
   
   app.get('/auth/token', (req, res) => {
-    res.json({ access_token: access_token})
+    res.json({ access_token: access_token, refresh_token: refresh_token })
   })
 
   app.post('/now-playing', async (req, res) => {
-    const token = req.body.token;
-
+    const { token, refreshToken } = req.body;
     var spotifyEndpoint = 'https://api.spotify.com/v1/me/player/currently-playing';
 
     if(!token) {
@@ -87,7 +77,7 @@ app.get('/auth/login', (req, res) => {
 
     try {
       
-      const spotifyResponse = await axios.get('https://api.spotify.com/v1/me/player/currently-playing', {
+      const spotifyResponse = await axios.get(spotifyEndpoint, {
         headers: {
           Authorization: `Bearer  ${token}`,
           'Content-Type': "application/json"
@@ -97,6 +87,28 @@ app.get('/auth/login', (req, res) => {
       
       res.json(spotifyResponse.data);
     } catch (error) {
+
+      if (error.response?.status === 401 && refreshToken) {
+        console.log('Access token expired. Refreshing...');
+
+        try {
+          const tokenResponse = await refreshAccessToken(refreshToken);
+          token = tokenResponse.data.access_token;
+          refreshToken = tokenResponse.data.refresh_token;
+          
+          const retryResponse = await axios.get(spotifyEndpoint, {
+            headers: {
+              Authorization: `Bearer  ${token}`,
+              'Content-Type': "application/json"
+            },
+            maxRedirects: 0, // This will prevent Axios from following redirects
+          });
+          res.json(retryResponse.data);
+        } catch (refreshError) {
+          res.status(500).json({ error: 'Failed ro refresh token' }); 
+        }
+      }
+
       console.error('Error fetching data from Spotify: ', error);
       res.status(500).json({ error: 'Failed to fetch data from Spotify' })
     }
@@ -105,3 +117,37 @@ app.get('/auth/login', (req, res) => {
   app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`)
   })
+
+  const refreshAccessToken = async (refreshToken) => {
+
+    var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      headers: {
+        'Authorization' : 'Basic ' + (Buffer.from(spotify_client_id + ':' + spotify_client_secret).toString('base64')),
+        'Content-Type' : 'application/x-www-form-urlencoded' 
+      },
+      form: {
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken
+      },
+      json: true
+    };
+
+    try {
+      const response = await axios.post(authOptions.url, authOptions.form, { headers: authOptions.headers });
+      return response.data.access_token;
+    } catch (error) {
+      console.error('Error refreshing token: ', error.response?.data || error.message);
+      throw error;
+    }
+  };
+
+  var randomStringGenerator = function (length) {
+    var text = '';
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (var i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+};
