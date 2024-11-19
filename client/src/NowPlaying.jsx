@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Slide from '@mui/material/Slide';
 import style from '@emotion/styled'
 
-function NowPlaying(props) {
+function NowPlaying({token, refreshToken, updateTokens }) {
 
     const [current_track, setCurrent_track] = useState(null);
     const [currentTrackId, setCurrentTrackId] = useState(null);
@@ -21,11 +21,17 @@ function NowPlaying(props) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ token: props.token }),
+                    body: JSON.stringify({ token, refreshToken }),
                 });
     
                 // Parse the response data
                 const data = await response.json();
+
+                if (data.access_token || data.refresh_token) {
+                    updateTokens(data.access_token, data.refresh_token);
+                    return;
+                }
+
 
                 if (data.item.id !== currentTrackId) {
                     setCurrent_track(data);
@@ -71,7 +77,7 @@ function NowPlaying(props) {
             if (endTimeout) clearTimeout(endTimeout);
         };
 
-    }, [currentTrackId, props.token]);
+    }, [currentTrackId, token, refreshToken]);
 
     return (
 
