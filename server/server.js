@@ -68,8 +68,8 @@ app.get('/auth/login', (req, res) => {
   })
 
   app.post('/now-playing', async (req, res) => {
-    const { token, refreshToken } = req.body;
-    var spotifyEndpoint = 'https://api.spotify.com/v1/me/player/currently-playing';
+    let { token, refreshToken } = req.body;
+    const spotifyEndpoint = 'https://api.spotify.com/v1/me/player/currently-playing';
 
     if(!token) {
       return res.status(400).json({ error: `Token is missing` });
@@ -85,32 +85,31 @@ app.get('/auth/login', (req, res) => {
         maxRedirects: 0, // This will prevent Axios from following redirects
       });
       
-      res.json(spotifyResponse.data);
+      return res.json(spotifyResponse.data);
+
     } catch (error) {
 
       if (error.response?.status === 401 && refreshToken) {
-        console.log('Access token expired. Refreshing...');
+        //console.log('Access token expired. Refreshing...');
 
         try {
           const tokenResponse = await refreshAccessToken(refreshToken);
-          token = tokenResponse.data.access_token;
-          refreshToken = tokenResponse.data.refresh_token;
           
-          const retryResponse = await axios.get(spotifyEndpoint, {
-            headers: {
-              Authorization: `Bearer  ${token}`,
-              'Content-Type': "application/json"
-            },
-            maxRedirects: 0, // This will prevent Axios from following redirects
+          token = tokenResponse.data.access_token;
+          refreshToken = tokenResponse.data.refresh_token || refreshToken;
+
+          return res.json({
+            access_token: token,
+            refresh_token: refreshToken
           });
-          res.json(retryResponse.data);
+
         } catch (refreshError) {
           res.status(500).json({ error: 'Failed ro refresh token' }); 
         }
       }
 
       console.error('Error fetching data from Spotify: ', error);
-      res.status(500).json({ error: 'Failed to fetch data from Spotify' })
+      //res.status(500).json({ error: 'Failed to fetch data from Spotify' })
     }
 })
   
@@ -120,26 +119,20 @@ app.get('/auth/login', (req, res) => {
 
   const refreshAccessToken = async (refreshToken) => {
 
-    var authOptions = {
+    const authOptions = {
+      method: 'post',
       url: 'https://accounts.spotify.com/api/token',
       headers: {
         'Authorization' : 'Basic ' + (Buffer.from(spotify_client_id + ':' + spotify_client_secret).toString('base64')),
         'Content-Type' : 'application/x-www-form-urlencoded' 
       },
-      form: {
+      data: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken
-      },
-      json: true
+      })
     };
 
-    try {
-      const response = await axios.post(authOptions.url, authOptions.form, { headers: authOptions.headers });
-      return response.data.access_token;
-    } catch (error) {
-      console.error('Error refreshing token: ', error.response?.data || error.message);
-      throw error;
-    }
+    return axios(authOptions);
   };
 
   var randomStringGenerator = function (length) {

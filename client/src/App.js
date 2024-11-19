@@ -8,6 +8,16 @@ function App() {
   const [token, setToken] = useState('');
   const [refreshToken, setRefreshToken] = useState('');
 
+  const updateTokens = (newToken, newRefreshToken) => {
+    if (newToken) {
+      setToken(newToken);
+    }
+
+    if(newRefreshToken) {
+      setRefreshToken(newRefreshToken);
+    }
+  }
+
   useEffect(() => {
     
     async function getToken() {
@@ -23,7 +33,7 @@ function App() {
   
   return (
     <>
-      { (token === '') ? <Login/> : <NowPlaying token={token} refreshToken={refreshToken} /> }
+      { (token === '') ? <Login/> : <NowPlaying token={token} refreshToken={refreshToken} updateTokens={updateTokens} /> }
     </>
   );
 }
