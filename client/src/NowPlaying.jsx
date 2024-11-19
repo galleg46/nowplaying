@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function NowPlaying(props) {
+function NowPlaying({token, refreshToken, updateTokens }) {
 
     const [current_track, setCurrent_track] = useState(null);
     const [currentTrackId, setCurrentTrackId] = useState(null);
@@ -17,11 +17,17 @@ function NowPlaying(props) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ token: props.token }),
+                    body: JSON.stringify({ token, refreshToken }),
                 });
     
                 // Parse the response data
                 const data = await response.json();
+
+                if (data.access_token || data.refresh_token) {
+                    updateTokens(data.access_token, data.refresh_token);
+                    return;
+                }
+
 
                 if (data.item.id !== currentTrackId) {
                     setCurrent_track(data);
@@ -42,14 +48,14 @@ function NowPlaying(props) {
         // Clear interval when component unmounts or if the song ID changes
         return () => clearInterval(intervalId);
 
-    }, [currentTrackId, props.token]);
+    }, [currentTrackId, token, refreshToken]);
 
     return (
         <div>
             {current_track ? (
                 <div>
-                    <h2>Now Playing: {current_track.item.album.name}</h2>
-                    <img src={current_track.item.album.images[0].url}/>
+                    <img src={current_track.item.album.images[2].url}/>
+                    <p1>{current_track.item.name} - {current_track.item.artists[0].name}</p1> 
                 </div>
             ) : (
                 <p>Loading...</p>
