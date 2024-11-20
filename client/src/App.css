@@ -112,11 +112,11 @@ body {
   height: 100%;
 }
 
-.now-playing__container div {
+/*.now-playing__container div {
   background: rgba(0, 0, 0, 0.5);
   padding: 20px;
   border-radius: 8px;
-}
+}*/
 
 .now-playing__container img {
   border-radius: 8px;
