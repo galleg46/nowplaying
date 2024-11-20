@@ -97,6 +97,33 @@ body {
   width: 45%;
 }
 
+.now-playing__wrapper {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  color: white;
+}
+
+.now-playing__container {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+}
+
+/*.now-playing__container div {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  border-radius: 8px;
+}*/
+
+.now-playing__container img {
+  border-radius: 8px;
+}
+
+
+
 .btn-spotify {
   background-color: #44c767;
   border-radius: 28px;
